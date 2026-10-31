@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for User profile
+    function isValidUser(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.firstName is string && data.firstName.size() <= 50 &&
+             data.lastName is string && data.lastName.size() <= 50 &&
+             data.email is string && data.email.size() <= 120 &&
+             data.role is string && data.role.size() <= 30;
+    }
+
+    // Validation for Lost / Found Item
+    function isValidItem(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.title is string && data.title.size() <= 120 &&
+             (data.type == 'LOST' || data.type == 'FOUND') &&
+             (data.status == 'UNCLAIMED' || data.status == 'UNFOUND' || data.status == 'FOUND' || data.status == 'CLAIMED') &&
+             data.details is string && data.details.size() <= 2000 &&
+             data.authorId is string && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() <= 100 &&
+             data.authorEmail is string && data.authorEmail.size() <= 120;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming());
+      allow delete: if isOwner(userId);
+    }
+
+    // Items Collection
+    match /items/{itemId} {
+      // Community feed: any authenticated user or visitor can read lost/found listings
+      allow read: if true;
+      allow create: if isSignedIn() && isValidItem(incoming()) && incoming().authorId == request.auth.uid;
+      allow update: if isSignedIn() && isValidItem(incoming()) && (
+        // Author can update details or mark resolved
+        existing().authorId == request.auth.uid ||
+        // Other authenticated users can claim (only updating status, claimantId, claimantName)
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'claimantId', 'claimantName'])
+      );
+      allow delete: if isSignedIn() && existing().authorId == request.auth.uid;
+    }
+
+    // Conversations Collection
+    match /conversations/{conversationId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+      }
+    }
+
+    // Registered users collection for username/password login
+    match /registered_users/{username} {
+      allow read, write: if true;
+    }
+  }
+}

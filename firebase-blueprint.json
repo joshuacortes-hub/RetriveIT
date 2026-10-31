@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile for community members and retrievers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "firstName": { "type": "string", "maxLength": 50 },
+        "lastName": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "format": "email", "maxLength": 120 },
+        "avatar": { "type": "string", "maxLength": 500 },
+        "isVerified": { "type": "boolean" },
+        "role": { "type": "string", "maxLength": 30 },
+        "points": { "type": "number" },
+        "joinedDate": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "firstName", "lastName", "email", "role"]
+    },
+    "Item": {
+      "title": "Item",
+      "description": "Lost or found item report posted by a community member",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 120 },
+        "type": { "type": "string", "enum": ["LOST", "FOUND"] },
+        "status": { "type": "string", "enum": ["UNCLAIMED", "UNFOUND", "FOUND", "CLAIMED"] },
+        "date": { "type": "string", "maxLength": 30 },
+        "imageUrl": { "type": "string", "maxLength": 800 },
+        "location": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 50 },
+        "details": { "type": "string", "maxLength": 2000 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "authorEmail": { "type": "string", "format": "email", "maxLength": 120 },
+        "reward": { "type": "number" },
+        "claimantId": { "type": "string", "maxLength": 128 },
+        "claimantName": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "title", "type", "status", "details", "authorId", "authorName", "authorEmail"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Two-way chat conversation between finder and owner",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "participantId": { "type": "string", "maxLength": 128 },
+        "participantName": { "type": "string", "maxLength": 100 },
+        "participantRole": { "type": "string", "maxLength": 30 },
+        "participantEmail": { "type": "string", "format": "email", "maxLength": 120 },
+        "lastMessage": { "type": "string", "maxLength": 500 },
+        "timestamp": { "type": "string", "maxLength": 50 },
+        "unreadCount": { "type": "number" },
+        "relatedItemId": { "type": "string", "maxLength": 128 },
+        "relatedItemTitle": { "type": "string", "maxLength": 120 }
+      },
+      "required": ["id", "participantId", "participantName", "participantEmail"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Single message inside a conversation thread",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "conversationId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "text": { "type": "string", "maxLength": 1500 },
+        "timestamp": { "type": "string", "maxLength": 50 },
+        "imageUrl": { "type": "string", "maxLength": 800 }
+      },
+      "required": ["id", "conversationId", "senderId", "senderName", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and verification details"
+    },
+    "/items/{itemId}": {
+      "schema": "Item",
+      "description": "Community lost and found item listings"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Direct chat threads between users"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual messages in a chat thread"
+    }
+  }
+}

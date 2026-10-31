@@ -1,0 +1,6 @@
+{
+  "name": "RetrieveIT - Lost & Found Community App",
+  "description": "Interactive, responsive community lost-and-found app matching Figma wireframes with item discovery, posting, messaging, verified retriever badges, and Google authentication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
